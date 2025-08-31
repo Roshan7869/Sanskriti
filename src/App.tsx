@@ -20,7 +20,7 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 max-w-7xl mx-auto">
       <Header 
         selectedLocation={selectedLocation}
         setSelectedLocation={setSelectedLocation}
@@ -28,21 +28,27 @@ function App() {
         setSearchQuery={setSearchQuery}
       />
       
-      <main className="pb-20">
+      <main className="pb-20 lg:pb-8">
         {activeTab === 'home' && (
           <>
             <Hero />
-            <EventsFeed events={filteredEvents} />
-            <HistoricalPlaces places={data.places} />
-            <TopInfluencers influencers={data.influencers} />
-            <NewsReporters reporters={data.reporters} />
+            <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:px-8">
+              <div className="lg:col-span-8">
+                <EventsFeed events={filteredEvents} />
+                <HistoricalPlaces places={data.places} />
+              </div>
+              <div className="lg:col-span-4 lg:space-y-8">
+                <TopInfluencers influencers={data.influencers} />
+                <NewsReporters reporters={data.reporters} />
+              </div>
+            </div>
           </>
         )}
         
         {activeTab === 'explore' && (
-          <div className="pt-20 px-4">
+          <div className="pt-20 px-4 lg:px-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Explore Places</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {data.places.map(place => (
                 <div key={place.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                   <img src={place.image} alt={place.title} className="w-full h-48 object-cover" />
@@ -63,11 +69,11 @@ function App() {
         )}
         
         {activeTab === 'events' && (
-          <div className="pt-20 px-4">
+          <div className="pt-20 px-4 lg:px-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Upcoming Events</h2>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {data.events.map(event => (
-                <div key={event.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+                <div key={event.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="flex items-start space-x-4">
                     <img src={event.image} alt={event.title} className="w-20 h-20 rounded-lg object-cover" />
                     <div className="flex-1">
@@ -90,7 +96,7 @@ function App() {
         )}
         
         {activeTab === 'profile' && (
-          <div className="pt-20 px-4">
+          <div className="pt-20 px-4 lg:px-8 max-w-2xl lg:mx-auto">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile</h2>
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="text-center mb-6">
@@ -122,7 +128,35 @@ function App() {
         )}
       </main>
       
-      <BottomNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className="lg:hidden">
+        <BottomNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
+      
+      {/* Desktop Navigation */}
+      <nav className="hidden lg:block fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 mt-20">
+        <div className="max-w-7xl mx-auto px-8 py-4">
+          <div className="flex items-center justify-center space-x-8">
+            {[
+              { id: 'home', label: 'Home' },
+              { id: 'explore', label: 'Explore Places' },
+              { id: 'events', label: 'Events' },
+              { id: 'profile', label: 'Profile' }
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  activeTab === item.id
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
     </div>
   );
 }

@@ -20,7 +20,7 @@ const NewsReporters: React.FC<NewsReportersProps> = ({ reporters }) => {
   };
 
   return (
-    <section className="px-4 py-8">
+    <section className="px-4 lg:px-0 py-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
           <Newspaper className="w-6 h-6 text-blue-500" />
@@ -31,14 +31,14 @@ const NewsReporters: React.FC<NewsReportersProps> = ({ reporters }) => {
         </button>
       </div>
       
-      <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
+      <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 lg:space-y-4">
         {reporters.map(reporter => (
-          <div key={reporter.id} className="flex-shrink-0 w-40 bg-white rounded-2xl shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="relative mb-3">
+          <div key={reporter.id} className="bg-white rounded-2xl shadow-lg p-4 lg:p-6 text-center lg:text-left lg:flex lg:items-center lg:space-x-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="relative mb-3 lg:mb-0 lg:flex-shrink-0">
               <img 
                 src={reporter.image} 
                 alt={reporter.name}
-                className="w-16 h-16 rounded-full mx-auto object-cover border-3 border-gradient-to-r from-blue-500 to-indigo-500 p-0.5"
+                className="w-16 h-16 lg:w-20 lg:h-20 rounded-full mx-auto lg:mx-0 object-cover border-3 border-gradient-to-r from-blue-500 to-indigo-500 p-0.5"
                 loading="lazy"
               />
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
@@ -46,14 +46,16 @@ const NewsReporters: React.FC<NewsReportersProps> = ({ reporters }) => {
               </div>
             </div>
             
-            <h3 className="font-bold text-gray-800 text-sm mb-1">{reporter.name}</h3>
-            <p className="text-gray-500 text-xs mb-1">@{reporter.username}</p>
-            <p className="text-blue-600 text-xs font-semibold mb-2">{reporter.outlet}</p>
-            <p className="text-gray-400 text-xs mb-3">{reporter.followers} followers</p>
+            <div className="lg:flex-1">
+              <h3 className="font-bold text-gray-800 text-sm lg:text-base mb-1">{reporter.name}</h3>
+              <p className="text-gray-500 text-xs lg:text-sm mb-1">@{reporter.username}</p>
+              <p className="text-blue-600 text-xs lg:text-sm font-semibold mb-2">{reporter.outlet}</p>
+              <p className="text-gray-400 text-xs lg:text-sm mb-3 lg:mb-0">{reporter.followers} followers</p>
+            </div>
             
             <button
               onClick={() => handleVisitProfile(reporter.username)}
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 rounded-lg text-xs font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 flex items-center justify-center space-x-1"
+              className="w-full lg:w-auto bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 lg:py-3 px-4 lg:px-6 rounded-lg text-xs lg:text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 flex items-center justify-center space-x-1 lg:flex-shrink-0"
             >
               <span>Follow</span>
               <ExternalLink className="w-3 h-3" />

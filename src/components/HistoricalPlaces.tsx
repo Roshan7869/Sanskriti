@@ -22,7 +22,7 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ places }) => {
   };
 
   return (
-    <section className="px-4 py-8">
+    <section className="px-4 lg:px-0 py-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800 font-serif">Historical Places</h2>
         <button className="text-orange-600 text-sm font-medium hover:text-orange-700 transition-colors">
@@ -37,7 +37,7 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ places }) => {
               <img 
                 src={place.image} 
                 alt={place.title}
-                className="w-full h-48 object-cover"
+                className="w-full h-48 lg:h-56 object-cover"
                 loading="lazy"
               />
               <div className="absolute top-4 left-4">
@@ -51,11 +51,11 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ places }) => {
               </div>
             </div>
             
-            <div className="p-6">
+            <div className="p-6 lg:p-8">
               <h3 className="text-xl font-bold text-gray-800 mb-2 font-serif">{place.title}</h3>
               <p className="text-gray-600 text-sm mb-4 leading-relaxed">{place.description}</p>
               
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
                 <div className="space-y-2">
                   <div className="flex items-center text-gray-500 text-sm">
                     <MapPin className="w-4 h-4 mr-2" />
@@ -69,7 +69,7 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ places }) => {
                 
                 <button
                   onClick={() => handleGetDirections(place.lat, place.lng)}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 lg:px-8 lg:py-4 rounded-xl font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 w-full lg:w-auto"
                 >
                   Get Directions
                 </button>
