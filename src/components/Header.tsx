@@ -1,0 +1,89 @@
+import React, { useState } from 'react';
+import { Search, MapPin, ChevronDown } from 'lucide-react';
+
+interface HeaderProps {
+  selectedLocation: string;
+  setSelectedLocation: (location: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({
+  selectedLocation,
+  setSelectedLocation,
+  searchQuery,
+  setSearchQuery
+}) => {
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  
+  const locations = [
+    'Bhilai, CG',
+    'Raipur, CG',
+    'Durg, CG',
+    'Korba, CG',
+    'Bilaspur, CG'
+  ];
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-orange-100">
+      <div className="px-4 py-3">
+        {/* Top row with logo and location */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/public/Gemini_Generated_Image_ocwun2ocwun2ocwu.png" 
+              alt="SANSKRITI Logo" 
+              className="w-10 h-10 rounded-lg shadow-sm"
+            />
+            <div>
+              <h1 className="text-xl font-bold text-gray-800 font-serif">SANSKRITI</h1>
+              <p className="text-xs text-gray-600">Heritage & Culture</p>
+            </div>
+          </div>
+          
+          <div className="relative">
+            <button
+              onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+              className="flex items-center space-x-2 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors"
+            >
+              <MapPin className="w-4 h-4 text-orange-600" />
+              <span className="text-sm font-medium text-gray-700">{selectedLocation}</span>
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            </button>
+            
+            {showLocationDropdown && (
+              <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[160px] z-10">
+                {locations.map(location => (
+                  <button
+                    key={location}
+                    onClick={() => {
+                      setSelectedLocation(location);
+                      setShowLocationDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-orange-50 text-sm text-gray-700 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                  >
+                    {location}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Search bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search places, events, celebrations..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+          />
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
