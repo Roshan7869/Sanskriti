@@ -6,22 +6,22 @@ interface HeaderProps {
   setSelectedLocation: (location: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  onAuthClick: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
   selectedLocation,
   setSelectedLocation,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  onAuthClick
 }) => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   
   const locations = [
     'Bhilai, CG',
-    'Raipur, CG',
     'Durg, CG',
-    'Korba, CG',
-    'Bilaspur, CG'
+    'Raipur, CG'
   ];
 
   return (

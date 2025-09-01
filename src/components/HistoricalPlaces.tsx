@@ -1,25 +1,40 @@
 import React from 'react';
 import { MapPin, Star, Clock } from 'lucide-react';
-
-interface Place {
-  id: number;
-  title: string;
-  description: string;
-  lat: number;
-  lng: number;
-  image: string;
-  rating: number;
-  category: string;
-}
+import { usePlaces } from '../hooks/usePlaces';
+import { HistoricalPlace } from '../types/api';
+import LoadingSpinner from './LoadingSpinner';
+import ErrorMessage from './ErrorMessage';
 
 interface HistoricalPlacesProps {
-  places: Place[];
+  searchQuery?: string;
 }
 
-const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ places }) => {
+const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery }) => {
+  const { places, loading, error } = usePlaces({ query: searchQuery, limit: 5 });
+
   const handleGetDirections = (lat: number, lng: number) => {
     window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
   };
+
+  if (loading) {
+    return (
+      <section className="px-4 lg:px-0 py-8">
+        <h2 className="text-2xl font-bold text-gray-800 font-serif mb-6">Historical Places</h2>
+        <div className="flex justify-center py-12">
+          <LoadingSpinner size="lg" />
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="px-4 lg:px-0 py-8">
+        <h2 className="text-2xl font-bold text-gray-800 font-serif mb-6">Historical Places</h2>
+        <ErrorMessage message={error} />
+      </section>
+    );
+  }
 
   return (
     <section className="px-4 lg:px-0 py-8">
@@ -32,10 +47,10 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ places }) => {
       
       <div className="space-y-6">
         {places.map(place => (
-          <div key={place.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div key={place._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="relative">
               <img 
-                src={place.image} 
+                src={place.imageUrl} 
                 alt={place.title}
                 className="w-full h-48 lg:h-56 object-cover"
                 loading="lazy"
@@ -59,7 +74,7 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ places }) => {
                 <div className="space-y-2">
                   <div className="flex items-center text-gray-500 text-sm">
                     <MapPin className="w-4 h-4 mr-2" />
-                    <span>Bhilai, CG</span>
+                    <span>{place.title}</span>
                   </div>
                   <div className="flex items-center text-gray-500 text-sm">
                     <Clock className="w-4 h-4 mr-2" />
@@ -68,7 +83,7 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ places }) => {
                 </div>
                 
                 <button
-                  onClick={() => handleGetDirections(place.lat, place.lng)}
+                  onClick={() => handleGetDirections(place.coordinates.lat, place.coordinates.lng)}
                   className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 lg:px-8 lg:py-4 rounded-xl font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 w-full lg:w-auto"
                 >
                   Get Directions

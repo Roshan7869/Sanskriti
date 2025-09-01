@@ -1,23 +1,41 @@
 import React from 'react';
 import { Instagram, ExternalLink } from 'lucide-react';
+import { useInfluencers } from '../hooks/useInfluencers';
+import LoadingSpinner from './LoadingSpinner';
+import ErrorMessage from './ErrorMessage';
 
-interface Influencer {
-  id: number;
-  username: string;
-  name: string;
-  image: string;
-  followers: string;
-  category: string;
-}
+const TopInfluencers: React.FC = () => {
+  const { influencers, loading, error } = useInfluencers({ limit: 5 });
 
-interface TopInfluencersProps {
-  influencers: Influencer[];
-}
-
-const TopInfluencers: React.FC<TopInfluencersProps> = ({ influencers }) => {
   const handleVisitProfile = (username: string) => {
     window.open(`https://instagram.com/${username}`, '_blank');
   };
+
+  if (loading) {
+    return (
+      <section className="px-4 lg:px-0 py-8">
+        <div className="flex items-center space-x-2 mb-6">
+          <Instagram className="w-6 h-6 text-pink-500" />
+          <h2 className="text-2xl font-bold text-gray-800 font-serif">Top Influencers</h2>
+        </div>
+        <div className="flex justify-center py-8">
+          <LoadingSpinner />
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="px-4 lg:px-0 py-8">
+        <div className="flex items-center space-x-2 mb-6">
+          <Instagram className="w-6 h-6 text-pink-500" />
+          <h2 className="text-2xl font-bold text-gray-800 font-serif">Top Influencers</h2>
+        </div>
+        <ErrorMessage message={error} />
+      </section>
+    );
+  }
 
   return (
     <section className="px-4 lg:px-0 py-8">
@@ -33,10 +51,10 @@ const TopInfluencers: React.FC<TopInfluencersProps> = ({ influencers }) => {
       
       <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 lg:space-y-4">
         {influencers.map(influencer => (
-          <div key={influencer.id} className="bg-white rounded-2xl shadow-lg p-4 lg:p-6 text-center lg:text-left lg:flex lg:items-center lg:space-x-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div key={influencer._id} className="bg-white rounded-2xl shadow-lg p-4 lg:p-6 text-center lg:text-left lg:flex lg:items-center lg:space-x-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="relative mb-3 lg:mb-0 lg:flex-shrink-0">
               <img 
-                src={influencer.image} 
+                src={influencer.imageUrl} 
                 alt={influencer.name}
                 className="w-16 h-16 lg:w-20 lg:h-20 rounded-full mx-auto lg:mx-0 object-cover border-3 border-gradient-to-r from-pink-500 to-orange-500 p-0.5"
                 loading="lazy"
