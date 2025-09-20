@@ -5,6 +5,8 @@ export interface IUser extends Document {
   email: string;
   password: string;
   region: string;
+  membershipLevel: 'basic' | 'plus';
+  approved: boolean;
   favorites: {
     events: mongoose.Types.ObjectId[];
     places: mongoose.Types.ObjectId[];
@@ -32,6 +34,15 @@ const userSchema = new Schema<IUser>({
     type: String,
     default: 'Bhilai, CG',
     trim: true
+  },
+  membershipLevel: {
+    type: String,
+    enum: ['basic', 'plus'],
+    default: 'basic'
+  },
+  approved: {
+    type: Boolean,
+    default: false
   },
   favorites: {
     events: [{

@@ -179,3 +179,72 @@ export const profileAPI = {
     return response.data.data!;
   }
 };
+
+// Instagram Reels API
+export const reelsAPI = {
+  getReels: async (params?: {
+    locationId?: string;
+    eventId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ reels: any[]; pagination: any }> => {
+    const response = await api.get<ApiResponse<{ reels: any[]; pagination: any }>>('/reels', {
+      params
+    });
+    return response.data.data!;
+  },
+
+  createReel: async (reelData: {
+    locationId?: string;
+    eventId?: string;
+    reelUrl: string;
+    caption: string;
+    instagramId?: string;
+  }): Promise<any> => {
+    const response = await api.post<ApiResponse<{ reel: any }>>('/reels', reelData);
+    return response.data.data!.reel;
+  },
+
+  approveReel: async (reelId: string): Promise<any> => {
+    const response = await api.patch<ApiResponse>(`/reels/${reelId}/approve`);
+    return response.data.data!;
+  },
+
+  deleteReel: async (reelId: string): Promise<any> => {
+    const response = await api.delete<ApiResponse>(`/reels/${reelId}`);
+    return response.data.data!;
+  }
+};
+
+// Membership API
+export const membershipAPI = {
+  applyForPlus: async (applicationData: {
+    instagramHandle?: string;
+    bio: string;
+    sampleWork?: string;
+  }): Promise<any> => {
+    const response = await api.post<ApiResponse>('/membership/apply', applicationData);
+    return response.data.data!;
+  },
+
+  getApplicationStatus: async (): Promise<any> => {
+    const response = await api.get<ApiResponse>('/membership/status');
+    return response.data.data!;
+  },
+
+  getApplications: async (params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ applications: any[]; pagination: any }> => {
+    const response = await api.get<ApiResponse<{ applications: any[]; pagination: any }>>('/membership/applications', {
+      params
+    });
+    return response.data.data!;
+  },
+
+  reviewApplication: async (applicationId: string, action: 'approve' | 'reject'): Promise<any> => {
+    const response = await api.patch<ApiResponse>(`/membership/applications/${applicationId}/${action}`);
+    return response.data.data!;
+  }
+};

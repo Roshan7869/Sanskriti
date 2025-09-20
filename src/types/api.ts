@@ -91,6 +91,8 @@ export interface User {
   id: string;
   email: string;
   region: string;
+  membershipLevel: 'basic' | 'plus';
+  approved: boolean;
   favorites: {
     events: string[];
     places: string[];
@@ -101,4 +103,37 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface InstagramReel {
+  _id: string;
+  locationId?: string;
+  eventId?: string;
+  uploaderId: string;
+  uploaderName: string;
+  uploaderType: 'admin' | 'creator';
+  reelUrl: string;
+  instagramId?: string;
+  caption: string;
+  thumbnailUrl?: string;
+  isApproved: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LocationDetail extends HistoricalPlace {
+  reels: InstagramReel[];
+  mapEmbedUrl: string;
+}
+
+export interface MembershipApplication {
+  _id: string;
+  userId: string;
+  instagramHandle?: string;
+  bio: string;
+  sampleWork?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  appliedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
 }

@@ -7,13 +7,18 @@ import ErrorMessage from './ErrorMessage';
 
 interface HistoricalPlacesProps {
   searchQuery?: string;
+  onLocationClick?: (locationId: string) => void;
 }
 
-const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery }) => {
+const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery, onLocationClick }) => {
   const { places, loading, error } = usePlaces({ query: searchQuery, limit: 5 });
 
   const handleGetDirections = (lat: number, lng: number) => {
     window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
+  };
+
+  const handlePlaceClick = (placeId: string) => {
+    onLocationClick?.(placeId);
   };
 
   if (loading) {
@@ -47,7 +52,11 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery }) => {
       
       <div className="space-y-6">
         {places.map(place => (
-          <div key={place._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div 
+            key={place._id} 
+            className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+            onClick={() => handlePlaceClick(place._id)}
+          >
             <div className="relative">
               <img 
                 src={place.imageUrl} 
@@ -83,7 +92,10 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery }) => {
                 </div>
                 
                 <button
-                  onClick={() => handleGetDirections(place.coordinates.lat, place.coordinates.lng)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleGetDirections(place.coordinates.lat, place.coordinates.lng);
+                  }}
                   className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 lg:px-8 lg:py-4 rounded-xl font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 w-full lg:w-auto"
                 >
                   Get Directions

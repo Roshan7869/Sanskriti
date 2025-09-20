@@ -8,6 +8,8 @@ import TopInfluencers from './components/TopInfluencers';
 import NewsReporters from './components/NewsReporters';
 import BottomNavigation from './components/BottomNavigation';
 import AuthModal from './components/AuthModal';
+import LocationDetailPage from './components/LocationDetailPage';
+import MembershipModal from './components/MembershipModal';
 import { usePlaces } from './hooks/usePlaces';
 import { useEvents } from './hooks/useEvents';
 
@@ -16,10 +18,32 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('home');
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
 
   // Fetch data for explore and events tabs
   const { places } = usePlaces({ limit: 20 });
   const { events } = useEvents({ limit: 20 });
+
+  const handleLocationClick = (locationId: string) => {
+    setSelectedLocationId(locationId);
+  };
+
+  const handleBackToPlaces = () => {
+    setSelectedLocationId(null);
+  };
+
+  // Show location detail page if a location is selected
+  if (selectedLocationId) {
+    return (
+      <AuthProvider>
+        <LocationDetailPage 
+          locationId={selectedLocationId} 
+          onBack={handleBackToPlaces}
+        />
+      </AuthProvider>
+    );
+  }
 
   return (
     <AuthProvider>
@@ -39,7 +63,10 @@ function App() {
               <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:px-8">
                 <div className="lg:col-span-8">
                   <EventsFeed searchQuery={searchQuery} />
-                  <HistoricalPlaces searchQuery={searchQuery} />
+                  <HistoricalPlaces 
+                    searchQuery={searchQuery} 
+                    onLocationClick={handleLocationClick}
+                  />
                 </div>
                 <div className="lg:col-span-4 lg:space-y-8">
                   <TopInfluencers />
@@ -54,7 +81,11 @@ function App() {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Explore Places</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {places.map(place => (
-                  <div key={place._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                  <div 
+                    key={place._id} 
+                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+                    onClick={() => handleLocationClick(place._id)}
+                  >
                     <img src={place.imageUrl} alt={place.title} className="w-full h-48 object-cover" />
                     <div className="p-4">
                       <h3 className="font-bold text-lg mb-2">{place.title}</h3>
@@ -66,8 +97,11 @@ function App() {
                           <span className="text-sm font-medium">{place.rating}</span>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}`, '_blank')}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}`, '_blank');
+                        }}
                         className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors"
                       >
                         Get Directions
@@ -127,6 +161,17 @@ function App() {
                 </div>
                 
                 <div className="space-y-4">
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-2">Plus Membership</h4>
+                    <p className="text-gray-600 text-sm mb-3">Share Instagram Reels and contribute content</p>
+                    <button
+                      onClick={() => setShowMembershipModal(true)}
+                      className="w-full bg-gradient-to-r from-pink-500 to-orange-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-orange-600 transition-all duration-300"
+                    >
+                      Apply for Plus Membership
+                    </button>
+                  </div>
+                  
                   <div className="border-t pt-4">
                     <h4 className="font-semibold mb-2">Saved Places</h4>
                     <p className="text-gray-600 text-sm">Save your favorite places to visit them later</p>
@@ -189,6 +234,11 @@ function App() {
         <AuthModal 
           isOpen={showAuthModal} 
           onClose={() => setShowAuthModal(false)} 
+        />
+        
+        <MembershipModal
+          isOpen={showMembershipModal}
+          onClose={() => setShowMembershipModal(false)}
         />
       </div>
     </AuthProvider>

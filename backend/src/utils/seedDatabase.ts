@@ -3,6 +3,9 @@ import { Event } from '../models/Event.js';
 import { HistoricalPlace } from '../models/HistoricalPlace.js';
 import { Influencer } from '../models/Influencer.js';
 import { Reporter } from '../models/Reporter.js';
+import { InstagramReel } from '../models/InstagramReel.js';
+import { MembershipApplication } from '../models/MembershipApplication.js';
+import { User } from '../models/User.js';
 
 const seedData = {
   events: [
@@ -209,6 +212,26 @@ const seedData = {
       ],
       socialLinks: { instagram: "https://instagram.com/cg_updates" }
     }
+  ],
+
+  // Sample Instagram Reels data
+  reels: [
+    {
+      locationId: null, // Will be populated with actual location IDs after seeding
+      reelUrl: "https://www.instagram.com/p/ABC123/",
+      caption: "Beautiful sunset at Maitri Bagh! The perfect place to unwind after a long day. 🌅 #Bhilai #MaitriBagh #Sunset",
+      uploaderName: "admin",
+      uploaderType: "admin",
+      isApproved: true
+    },
+    {
+      locationId: null,
+      reelUrl: "https://www.instagram.com/reel/DEF456/",
+      caption: "The industrial heritage of Bhilai Steel Plant is truly remarkable. A testament to India's progress! 🏭 #BhilaiSteelPlant #Heritage",
+      uploaderName: "heritage_lover",
+      uploaderType: "creator",
+      isApproved: true
+    }
   ]
 };
 
@@ -224,16 +247,29 @@ export const seedDatabase = async (): Promise<void> => {
       Event.deleteMany({}),
       HistoricalPlace.deleteMany({}),
       Influencer.deleteMany({}),
-      Reporter.deleteMany({})
+      Reporter.deleteMany({}),
+      InstagramReel.deleteMany({}),
+      MembershipApplication.deleteMany({})
     ]);
+
+    // Create a sample admin user
+    console.log('👤 Creating sample admin user...');
+    const adminUser = new User({
+      email: 'admin@sanskriti.com',
+      password: 'admin123',
+      region: 'Bhilai, CG',
+      membershipLevel: 'plus',
+      approved: true
+    });
+    await adminUser.save();
 
     // Seed events
     console.log('📅 Seeding events...');
-    await Event.insertMany(seedData.events);
+    const events = await Event.insertMany(seedData.events);
 
     // Seed places
     console.log('🏛️ Seeding historical places...');
-    await HistoricalPlace.insertMany(seedData.places);
+    const places = await HistoricalPlace.insertMany(seedData.places);
 
     // Seed influencers
     console.log('👥 Seeding influencers...');
@@ -243,6 +279,16 @@ export const seedDatabase = async (): Promise<void> => {
     console.log('📰 Seeding reporters...');
     await Reporter.insertMany(seedData.reporters);
 
+    // Seed Instagram Reels with actual location IDs
+    console.log('📱 Seeding Instagram Reels...');
+    const reelsWithLocationIds = seedData.reels.map((reel, index) => ({
+      ...reel,
+      locationId: places[index % places.length]._id,
+      uploaderId: adminUser._id,
+      instagramId: `sample_${index + 1}`
+    }));
+    await InstagramReel.insertMany(reelsWithLocationIds);
+
     console.log('✅ Database seeding completed successfully!');
     
     // Print summary
@@ -250,14 +296,18 @@ export const seedDatabase = async (): Promise<void> => {
       Event.countDocuments(),
       HistoricalPlace.countDocuments(),
       Influencer.countDocuments(),
-      Reporter.countDocuments()
+      Reporter.countDocuments(),
+      InstagramReel.countDocuments(),
+      User.countDocuments()
     ]);
 
     console.log(`📊 Seeded data summary:
     - Events: ${counts[0]}
     - Historical Places: ${counts[1]}
     - Influencers: ${counts[2]}
-    - Reporters: ${counts[3]}`);
+    - Reporters: ${counts[3]}
+    - Instagram Reels: ${counts[4]}
+    - Users: ${counts[5]}`);
 
   } catch (error) {
     console.error('❌ Database seeding failed:', error);

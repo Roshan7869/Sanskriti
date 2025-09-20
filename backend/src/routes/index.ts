@@ -6,6 +6,8 @@ import influencerRoutes from './influencers.js';
 import reporterRoutes from './reporters.js';
 import profileRoutes from './profile.js';
 import searchRoutes from './search.js';
+import reelRoutes from './reels.js';
+import membershipRoutes from './membership.js';
 
 const router = Router();
 
@@ -27,5 +29,7 @@ router.use('/influencers', influencerRoutes);
 router.use('/reporters', reporterRoutes);
 router.use('/profile', profileRoutes);
 router.use('/search', searchRoutes);
+router.use('/reels', reelRoutes);
+router.use('/membership', membershipRoutes);
 
 export default router;
