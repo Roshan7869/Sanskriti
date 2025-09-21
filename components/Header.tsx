@@ -33,13 +33,9 @@ const Header: React.FC<HeaderProps> = ({
         {/* Top row with logo and location */}
         <div className="flex items-center justify-between mb-3 lg:mb-4">
           <div className="flex items-center space-x-3">
-            <Image 
-              src="/Gemini_Generated_Image_ocwun2ocwun2ocwu.png" 
-              alt="SANSKRITI Logo" 
-              width={40}
-              height={40}
-              className="rounded-lg shadow-sm"
-            />
+            <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">S</span>
+            </div>
             <div>
               <h1 className="text-xl lg:text-2xl font-bold text-gray-800 font-serif">SANSKRITI</h1>
               <p className="text-xs lg:text-sm text-gray-600">Heritage & Culture</p>

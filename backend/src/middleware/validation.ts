@@ -81,8 +81,9 @@ export const validateEventCreation = [
   body('date')
     .isISO8601()
     .toDate()
-    .custom((date: Date) => {
-      if (date <= new Date()) {
+    .custom((value: any) => {
+      const date = new Date(value);
+      if (isNaN(date.getTime()) || date <= new Date()) {
         throw new Error('Event date must be in the future');
       }
       return true;

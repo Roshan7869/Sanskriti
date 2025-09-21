@@ -34,7 +34,7 @@ export const useEvents = (params: UseEventsParams = {}) => {
         setPagination(data.pagination);
       } catch (err: any) {
         console.error('Failed to fetch events:', err);
-        setError(err.response?.data?.error || 'Failed to fetch events');
+        setError(err.response?.data?.error || err.message || 'Failed to fetch events');
       } finally {
         setLoading(false);
       }

@@ -30,7 +30,7 @@ export const useInfluencers = (params: UseInfluencersParams = {}) => {
         setPagination(data.pagination);
       } catch (err: any) {
         console.error('Failed to fetch influencers:', err);
-        setError(err.response?.data?.error || 'Failed to fetch influencers');
+        setError(err.response?.data?.error || err.message || 'Failed to fetch influencers');
       } finally {
         setLoading(false);
       }

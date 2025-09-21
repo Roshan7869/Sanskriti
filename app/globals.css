@@ -32,9 +32,11 @@
   }
   
   .border-gradient-to-r {
-    border: 2px solid;
-    border-image: linear-gradient(to right, #ec4899, #f97316) 1;
+    position: relative;
+    border: 2px solid transparent;
     border-radius: 50%;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(to right, #ec4899, #f97316) border-box;
   }
 }
 

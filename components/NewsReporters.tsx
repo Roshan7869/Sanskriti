@@ -58,7 +58,7 @@ const NewsReporters: React.FC = () => {
               <img 
                 src={reporter.imageUrl} 
                 alt={reporter.name}
-                className="w-16 h-16 lg:w-20 lg:h-20 rounded-full mx-auto lg:mx-0 object-cover border-3 border-gradient-to-r from-blue-500 to-indigo-500 p-0.5"
+                className="w-16 h-16 lg:w-20 lg:h-20 rounded-full mx-auto lg:mx-0 object-cover border-2 border-blue-500"
                 loading="lazy"
               />
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">

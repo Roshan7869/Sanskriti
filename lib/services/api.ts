@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { ApiResponse, Event, HistoricalPlace, Influencer, Reporter, AuthResponse } from '@/lib/types/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api')
+  : 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({

@@ -30,7 +30,7 @@ export const usePlaces = (params: UsePlacesParams = {}) => {
         setPagination(data.pagination);
       } catch (err: any) {
         console.error('Failed to fetch places:', err);
-        setError(err.response?.data?.error || 'Failed to fetch places');
+        setError(err.response?.data?.error || err.message || 'Failed to fetch places');
       } finally {
         setLoading(false);
       }

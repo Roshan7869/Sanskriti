@@ -30,7 +30,7 @@ export const useReporters = (params: UseReportersParams = {}) => {
         setPagination(data.pagination);
       } catch (err: any) {
         console.error('Failed to fetch reporters:', err);
-        setError(err.response?.data?.error || 'Failed to fetch reporters');
+        setError(err.response?.data?.error || err.message || 'Failed to fetch reporters');
       } finally {
         setLoading(false);
       }

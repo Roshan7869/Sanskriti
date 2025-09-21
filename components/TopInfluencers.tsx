@@ -58,7 +58,7 @@ const TopInfluencers: React.FC = () => {
               <img 
                 src={influencer.imageUrl} 
                 alt={influencer.name}
-                className="w-16 h-16 lg:w-20 lg:h-20 rounded-full mx-auto lg:mx-0 object-cover border-3 border-gradient-to-r from-pink-500 to-orange-500 p-0.5"
+                className="w-16 h-16 lg:w-20 lg:h-20 rounded-full mx-auto lg:mx-0 object-cover border-2 border-pink-500"
                 loading="lazy"
               />
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User.js';
 import { generateToken } from '../middleware/auth.js';
+import jwt from 'jsonwebtoken';
 import { ApiResponse, UserRegistration, UserLogin } from '../types/index.js';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
