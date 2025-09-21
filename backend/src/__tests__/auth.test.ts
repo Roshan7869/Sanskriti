@@ -1,23 +1,18 @@
 import request from 'supertest';
-import express from 'express';
-import authRoutes from '../routes/auth.js';
+import { app } from './setup.js';
 import { User } from '../models/User.js';
 
-const app = express();
-app.use(express.json());
-app.use('/auth', authRoutes);
-
 describe('Auth Routes', () => {
-  describe('POST /auth/register', () => {
+  describe('POST /api/auth/register', () => {
     it('should register a new user successfully', async () => {
       const userData = {
+        username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
-        region: 'Bhilai, CG'
+        password: 'password123'
       };
 
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/auth/register')
         .send(userData)
         .expect(201);
 
@@ -33,7 +28,7 @@ describe('Auth Routes', () => {
       };
 
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/auth/register')
         .send(userData)
         .expect(400);
 
@@ -43,12 +38,13 @@ describe('Auth Routes', () => {
 
     it('should not register user with short password', async () => {
       const userData = {
-        email: 'test@example.com',
+        username: 'testuser2',
+        email: 'test2@example.com',
         password: '123'
       };
 
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/auth/register')
         .send(userData)
         .expect(400);
 
@@ -56,14 +52,13 @@ describe('Auth Routes', () => {
     });
   });
 
-  describe('POST /auth/login', () => {
+  describe('POST /api/auth/login', () => {
     beforeEach(async () => {
-      const user = new User({
+      await User.create({
+        username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
-        region: 'Bhilai, CG'
+        password: 'password123'
       });
-      await user.save();
     });
 
     it('should login user with valid credentials', async () => {
@@ -73,7 +68,7 @@ describe('Auth Routes', () => {
       };
 
       const response = await request(app)
-        .post('/auth/login')
+        .post('/api/auth/login')
         .send(loginData)
         .expect(200);
 
@@ -89,7 +84,7 @@ describe('Auth Routes', () => {
       };
 
       const response = await request(app)
-        .post('/auth/login')
+        .post('/api/auth/login')
         .send(loginData)
         .expect(401);
 

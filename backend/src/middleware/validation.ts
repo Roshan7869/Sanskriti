@@ -20,6 +20,12 @@ export const handleValidationErrors = (
 
 // Auth validation rules
 export const validateRegistration = [
+  body('username')
+    .trim()
+    .isLength({ min: 3, max: 20 })
+    .withMessage('Username must be between 3 and 20 characters')
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage('Username can only contain letters, numbers, and underscores'),
   body('email')
     .isEmail()
     .normalizeEmail()
@@ -27,11 +33,6 @@ export const validateRegistration = [
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long'),
-  body('region')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Region cannot exceed 100 characters'),
   handleValidationErrors
 ];
 
@@ -48,49 +49,22 @@ export const validateLogin = [
 
 // Event validation rules
 export const validateEventCreation = [
-  body('title')
+  body('name')
     .trim()
-    .isLength({ min: 1, max: 200 })
-    .withMessage('Title must be between 1 and 200 characters'),
+    .isLength({ min: 3, max: 200 })
+    .withMessage('Name must be between 3 and 200 characters'),
   body('description')
     .trim()
-    .isLength({ min: 1, max: 1000 })
-    .withMessage('Description must be between 1 and 1000 characters'),
-  body('category')
-    .isIn([
-      'Cultural Event',
-      'State Festival', 
-      'Traditional Festival',
-      'Religious Festival',
-      'Art & Culture',
-      'Historical Tour',
-      'Workshop',
-      'Exhibition'
-    ])
-    .withMessage('Invalid category'),
-  body('location')
-    .trim()
-    .notEmpty()
-    .withMessage('Location is required'),
-  body('coordinates.lat')
-    .isFloat({ min: -90, max: 90 })
-    .withMessage('Latitude must be between -90 and 90'),
-  body('coordinates.lng')
-    .isFloat({ min: -180, max: 180 })
-    .withMessage('Longitude must be between -180 and 180'),
-  body('date')
+    .isLength({ min: 10 })
+    .withMessage('Description must be at least 10 characters long'),
+  body('startDate')
     .isISO8601()
-    .toDate()
-    .custom((value: any) => {
-      const date = new Date(value);
-      if (isNaN(date.getTime()) || date <= new Date()) {
-        throw new Error('Event date must be in the future');
-      }
-      return true;
-    }),
-  body('imageUrl')
-    .isURL()
-    .withMessage('Please provide a valid image URL'),
+    .withMessage('Start date must be a valid ISO 8601 date'),
+  body('type')
+    .isIn(['festival', 'celebration', 'pandal', 'event'])
+    .withMessage('Invalid event type'),
+  body('images').isArray({ min: 1 }).withMessage('At least one image URL is required'),
+  body('images.*').isURL().withMessage('Each image must be a valid URL'),
   handleValidationErrors
 ];
 
@@ -115,27 +89,20 @@ export const validateSearch = [
     .withMessage('Search query must be between 1 and 100 characters'),
   query('type')
     .optional()
-    .isIn(['events', 'places', 'all'])
-    .withMessage('Search type must be events, places, or all'),
+    .isIn(['events', 'locations', 'members', 'all'])
+    .withMessage('Search type must be valid'),
   handleValidationErrors
 ];
 
 export const validateEventQuery = [
   ...validatePagination,
-  ...validateSearch,
   query('date')
     .optional()
     .isISO8601()
     .withMessage('Date must be in ISO format (YYYY-MM-DD)'),
-  query('category')
+  query('type')
     .optional()
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Category cannot be empty'),
-  query('location')
-    .optional()
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Location cannot be empty'),
+    .isIn(['festival', 'celebration', 'pandal', 'event'])
+    .withMessage('Invalid event type'),
   handleValidationErrors
 ];

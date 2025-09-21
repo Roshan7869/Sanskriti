@@ -5,12 +5,14 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
+    role: 'user' | 'admin';
   };
 }
 
 export interface CustomJwtPayload extends JwtPayload {
   userId: string;
   email: string;
+  role: string;
 }
 
 export interface ApiResponse<T = any> {
@@ -37,9 +39,9 @@ export interface EventQuery extends PaginationQuery, SearchQuery {
 }
 
 export interface UserRegistration {
+  username: string;
   email: string;
   password: string;
-  region?: string;
 }
 
 export interface UserLogin {
@@ -48,10 +50,17 @@ export interface UserLogin {
 }
 
 export interface UserProfile {
+  username: string;
   email: string;
-  region: string;
+  bio?: string;
+  profileImage?: string;
+  socialLinks?: {
+    instagram?: string;
+    newsChannel?: string;
+  };
+  membershipStatus: 'regular' | 'plus_pending' | 'plus_approved';
   favorites: {
     events: string[];
-    places: string[];
+    locations: string[];
   };
 }

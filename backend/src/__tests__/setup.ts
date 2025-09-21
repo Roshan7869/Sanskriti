@@ -1,5 +1,11 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
+import express from 'express';
+import allRoutes from '../routes/index.js';
+
+export const app = express();
+app.use(express.json());
+app.use('/api', allRoutes);
 
 let mongoServer: MongoMemoryServer;
 

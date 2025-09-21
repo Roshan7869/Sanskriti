@@ -35,7 +35,8 @@ export const authenticateToken = async (
 
     req.user = {
       id: user._id.toString(),
-      email: user.email
+      email: user.email,
+      role: user.role
     };
 
     next();
@@ -55,9 +56,20 @@ export const authenticateToken = async (
   }
 };
 
-export const generateToken = (userId: string, email: string): string => {
+export const isAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  if (req.user?.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({
+      success: false,
+      error: 'Forbidden: Access is restricted to administrators.'
+    });
+  }
+};
+
+export const generateToken = (userId: string, email: string, role: string): string => {
   return jwt.sign(
-    { userId, email },
+    { userId, email, role },
     JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );

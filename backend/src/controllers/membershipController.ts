@@ -3,27 +3,22 @@ import { MembershipApplication } from '../models/MembershipApplication.js';
 import { User } from '../models/User.js';
 import { AuthenticatedRequest, ApiResponse } from '../types/index.js';
 
-export const applyForPlus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const applyForMembership = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { instagramHandle, bio, sampleWork } = req.body;
-
-    // Check if user already has an application
-    const existingApplication = await MembershipApplication.findOne({ userId });
-    if (existingApplication) {
-      res.status(400).json({
-        success: false,
-        error: 'You have already submitted a membership application'
-      } as ApiResponse);
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
       return;
     }
 
-    // Check if user already has plus membership
+    const { instagramHandle, bio, sampleWork } = req.body;
+
+    // Check if user already has a non-rejected application or is already a plus member
     const user = await User.findById(userId);
-    if (user?.membershipLevel === 'plus') {
+    if (user?.membershipStatus === 'plus_approved' || user?.membershipStatus === 'plus_pending') {
       res.status(400).json({
         success: false,
-        error: 'You already have Plus membership'
+        error: `Your membership status is already "${user.membershipStatus}"`
       } as ApiResponse);
       return;
     }
@@ -34,8 +29,11 @@ export const applyForPlus = async (req: AuthenticatedRequest, res: Response): Pr
       bio,
       sampleWork
     });
-
     await application.save();
+
+    // Update user's status to pending
+    user.membershipStatus = 'plus_pending';
+    await user.save();
 
     res.status(201).json({
       success: true,
@@ -43,7 +41,7 @@ export const applyForPlus = async (req: AuthenticatedRequest, res: Response): Pr
       message: 'Plus membership application submitted successfully'
     } as ApiResponse);
   } catch (error) {
-    console.error('Apply for plus error:', error);
+    console.error('Apply for membership error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to submit application'
@@ -54,7 +52,6 @@ export const applyForPlus = async (req: AuthenticatedRequest, res: Response): Pr
 export const getApplicationStatus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-
     const application = await MembershipApplication.findOne({ userId });
     
     res.json({
@@ -72,26 +69,17 @@ export const getApplicationStatus = async (req: AuthenticatedRequest, res: Respo
 
 export const getApplications = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const {
-      status,
-      page = '1',
-      limit = '10'
-    } = req.query;
-
+    const { status, page = '1', limit = '10' } = req.query;
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
-    // Build filter object
     const filter: any = {};
-    if (status) {
-      filter.status = status;
-    }
+    if (status) filter.status = status;
 
-    // Execute query with pagination
     const [applications, total] = await Promise.all([
       MembershipApplication.find(filter)
-        .populate('userId', 'email region')
+        .populate('userId', 'username email') // Updated fields
         .sort({ appliedAt: -1 })
         .skip(skip)
         .limit(limitNum)
@@ -105,14 +93,7 @@ export const getApplications = async (req: AuthenticatedRequest, res: Response):
       success: true,
       data: {
         applications,
-        pagination: {
-          currentPage: pageNum,
-          totalPages,
-          totalItems: total,
-          itemsPerPage: limitNum,
-          hasNextPage: pageNum < totalPages,
-          hasPrevPage: pageNum > 1
-        }
+        pagination: { currentPage: pageNum, totalPages, totalItems: total }
       }
     } as ApiResponse);
   } catch (error) {
@@ -127,55 +108,44 @@ export const getApplications = async (req: AuthenticatedRequest, res: Response):
 export const reviewApplication = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { action } = req.params; // 'approve' or 'reject'
-    const { reviewNotes } = req.body;
+    const { status, reviewNotes } = req.body; // 'approved' or 'rejected'
     const reviewerId = req.user?.id;
 
-    if (!['approve', 'reject'].includes(action)) {
+    if (!['approved', 'rejected'].includes(status)) {
       res.status(400).json({
         success: false,
-        error: 'Invalid action. Must be "approve" or "reject"'
+        error: 'Invalid status. Must be "approved" or "rejected"'
       } as ApiResponse);
       return;
     }
 
     const application = await MembershipApplication.findById(id);
     if (!application) {
-      res.status(404).json({
-        success: false,
-        error: 'Application not found'
-      } as ApiResponse);
+      res.status(404).json({ success: false, error: 'Application not found' });
       return;
     }
 
     if (application.status !== 'pending') {
-      res.status(400).json({
-        success: false,
-        error: 'Application has already been reviewed'
-      } as ApiResponse);
+      res.status(400).json({ success: false, error: 'Application has already been reviewed' });
       return;
     }
 
-    // Update application status
-    application.status = action === 'approve' ? 'approved' : 'rejected';
+    application.status = status;
     application.reviewedAt = new Date();
     application.reviewedBy = reviewerId as any;
     application.reviewNotes = reviewNotes;
-
     await application.save();
 
-    // If approved, update user's membership level
-    if (action === 'approve') {
-      await User.findByIdAndUpdate(application.userId, {
-        membershipLevel: 'plus',
-        approved: true
-      });
-    }
+    // Update user's membership status
+    const newMembershipStatus = status === 'approved' ? 'plus_approved' : 'regular';
+    await User.findByIdAndUpdate(application.userId, {
+      membershipStatus: newMembershipStatus
+    });
 
     res.json({
       success: true,
       data: { application },
-      message: `Application ${action}d successfully`
+      message: `Application ${status} successfully`
     } as ApiResponse);
   } catch (error) {
     console.error('Review application error:', error);

@@ -2,14 +2,20 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
+  username: string;
   email: string;
   password: string;
-  region: string;
-  membershipLevel: 'basic' | 'plus';
-  approved: boolean;
+  profileImage?: string;
+  bio?: string;
+  socialLinks?: {
+    instagram?: string;
+    newsChannel?: string;
+  };
+  membershipStatus: 'regular' | 'plus_pending' | 'plus_approved';
+  role: 'user' | 'admin';
   favorites: {
     events: mongoose.Types.ObjectId[];
-    places: mongoose.Types.ObjectId[];
+    locations: mongoose.Types.ObjectId[];
   };
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +23,14 @@ export interface IUser extends Document {
 }
 
 const userSchema = new Schema<IUser>({
+  username: {
+    type: String,
+    required: [true, 'Username is required'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores']
+  },
   email: {
     type: String,
     required: [true, 'Email is required'],
@@ -30,28 +44,37 @@ const userSchema = new Schema<IUser>({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters long']
   },
-  region: {
+  profileImage: {
     type: String,
-    default: 'Bhilai, CG',
     trim: true
   },
-  membershipLevel: {
+  bio: {
     type: String,
-    enum: ['basic', 'plus'],
-    default: 'basic'
+    trim: true,
+    maxlength: [500, 'Bio cannot exceed 500 characters']
   },
-  approved: {
-    type: Boolean,
-    default: false
+  socialLinks: {
+    instagram: { type: String, trim: true },
+    newsChannel: { type: String, trim: true }
+  },
+  membershipStatus: {
+    type: String,
+    enum: ['regular', 'plus_pending', 'plus_approved'],
+    default: 'regular'
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
   },
   favorites: {
     events: [{
       type: Schema.Types.ObjectId,
       ref: 'Event'
     }],
-    places: [{
+    locations: [{
       type: Schema.Types.ObjectId,
-      ref: 'HistoricalPlace'
+      ref: 'Location' // Updated reference
     }]
   }
 }, {

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, verifyToken } from '../controllers/authController.js';
+import { register, login } from '../controllers/authController.js';
 import { validateRegistration, validateLogin } from '../middleware/validation.js';
 import { authLimiter } from '../middleware/security.js';
 
@@ -15,6 +15,7 @@ router.post('/register', validateRegistration, register);
 router.post('/login', validateLogin, login);
 
 // GET /api/auth/verify
-router.get('/verify', verifyToken);
+// This route is removed as token verification is implicitly handled by authenticated endpoints.
+// router.get('/verify', verifyToken);
 
 export default router;

@@ -8,12 +8,12 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const notoSerif = Noto_Serif({ subsets: ['latin'], variable: '--font-noto-serif' });
 
 export const metadata: Metadata = {
-  title: 'SANSKRITI - Discover Heritage & Culture',
-  description: 'Explore the rich cultural heritage of Chhattisgarh through historical landmarks, vibrant celebrations, and local stories.',
-  keywords: 'Chhattisgarh, Bhilai, heritage, culture, historical places, events, festivals',
+  title: 'Tourista - Discover the World',
+  description: 'Your ultimate guide to discovering tourist locations, festivals, and celebrations worldwide. Join our community and share your adventures.',
+  keywords: 'travel, tourism, locations, festivals, events, world, discover, community',
   openGraph: {
-    title: 'SANSKRITI - Discover Heritage & Culture',
-    description: 'Your gateway to exploring the cultural treasures of Chhattisgarh',
+    title: 'Tourista - Discover the World',
+    description: 'Your ultimate guide to discovering tourist locations, festivals, and celebrations worldwide.',
     type: 'website',
   },
 };

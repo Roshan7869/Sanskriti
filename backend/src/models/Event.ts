@@ -1,96 +1,80 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IEvent extends Document {
-  title: string;
+  name: string;
   description: string;
-  category: string;
-  location: string;
-  coordinates: {
-    lat: number;
-    lng: number;
+  startDate: Date;
+  endDate?: Date;
+  location?: mongoose.Types.ObjectId; // Optional ref to a Location
+  coordinates?: { // Only if not tied to a Location
+    type: 'Point';
+    coordinates: [number, number];
   };
-  date: Date;
-  imageUrl: string;
-  isActive: boolean;
+  type: 'festival' | 'celebration' | 'pandal' | 'event';
+  images: string[];
   createdAt: Date;
   updatedAt: Date;
 }
 
 const eventSchema = new Schema<IEvent>({
-  title: {
+  name: {
     type: String,
-    required: [true, 'Event title is required'],
+    required: [true, 'Event name is required'],
     trim: true,
-    maxlength: [200, 'Title cannot exceed 200 characters']
+    maxlength: [200, 'Name cannot exceed 200 characters']
   },
   description: {
     type: String,
     required: [true, 'Event description is required'],
     trim: true,
-    maxlength: [1000, 'Description cannot exceed 1000 characters']
+    maxlength: [2000, 'Description cannot exceed 2000 characters']
   },
-  category: {
-    type: String,
-    required: [true, 'Event category is required'],
-    enum: [
-      'Cultural Event',
-      'State Festival', 
-      'Traditional Festival',
-      'Religious Festival',
-      'Art & Culture',
-      'Historical Tour',
-      'Workshop',
-      'Exhibition'
-    ],
-    trim: true
-  },
-  location: {
-    type: String,
-    required: [true, 'Event location is required'],
-    trim: true
-  },
-  coordinates: {
-    lat: {
-      type: Number,
-      required: [true, 'Latitude is required'],
-      min: [-90, 'Latitude must be between -90 and 90'],
-      max: [90, 'Latitude must be between -90 and 90']
-    },
-    lng: {
-      type: Number,
-      required: [true, 'Longitude is required'],
-      min: [-180, 'Longitude must be between -180 and 180'],
-      max: [180, 'Longitude must be between -180 and 180']
-    }
-  },
-  date: {
+  startDate: {
     type: Date,
-    required: [true, 'Event date is required'],
+    required: [true, 'Start date is required'],
     validate: {
       validator: function(date: Date) {
-        return date > new Date();
+        // Allow dates in the past for historical events, but default validation can be here
+        return true;
       },
-      message: 'Event date must be in the future'
+      message: 'Start date must be valid'
     }
   },
-  imageUrl: {
-    type: String,
-    required: [true, 'Event image URL is required'],
-    trim: true
+  endDate: {
+    type: Date,
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
+  location: {
+    type: Schema.Types.ObjectId,
+    ref: 'Location'
+  },
+  coordinates: {
+    type: {
+      type: String,
+      enum: ['Point'],
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+    }
+  },
+  type: {
+    type: String,
+    required: true,
+    enum: ['festival', 'celebration', 'pandal', 'event']
+  },
+  images: [{
+    type: String,
+    trim: true,
+    required: [true, 'At least one image URL is required']
+  }]
 }, {
   timestamps: true
 });
 
 // Indexes for better query performance
-eventSchema.index({ title: 'text', description: 'text' });
-eventSchema.index({ category: 1 });
-eventSchema.index({ date: 1 });
+eventSchema.index({ name: 'text', description: 'text' });
+eventSchema.index({ startDate: 1 });
+eventSchema.index({ type: 1 });
 eventSchema.index({ location: 1 });
-eventSchema.index({ isActive: 1 });
+eventSchema.index({ coordinates: '2dsphere' });
 
 export const Event = mongoose.model<IEvent>('Event', eventSchema);

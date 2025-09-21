@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import {
-  applyForPlus,
+  applyForMembership,
   getApplicationStatus,
   getApplications,
   reviewApplication
 } from '../controllers/membershipController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, isAdmin } from '../middleware/auth.js';
 import { body } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
 
@@ -14,7 +14,7 @@ const router = Router();
 // All membership routes require authentication
 router.use(authenticateToken);
 
-// POST /api/membership/apply
+// POST /api/membership/apply - Apply for plus membership
 router.post('/apply', [
   body('bio')
     .trim()
@@ -30,16 +30,21 @@ router.post('/apply', [
     .isURL()
     .withMessage('Sample work must be a valid URL'),
   handleValidationErrors
-], applyForPlus);
+], applyForMembership);
 
-// GET /api/membership/status
+// GET /api/membership/status - Check own application status
 router.get('/status', getApplicationStatus);
 
-// GET /api/membership/applications (admin only)
-router.get('/applications', getApplications);
+// --- Admin Routes ---
 
-// PATCH /api/membership/applications/:id/:action (admin only)
-router.patch('/applications/:id/:action', [
+// GET /api/membership/applications - Get all applications (admin only)
+router.get('/applications', isAdmin, getApplications);
+
+// PATCH /api/membership/applications/:id/review - Review an application (admin only)
+router.patch('/applications/:id/review', isAdmin, [
+  body('status')
+    .isIn(['approved', 'rejected'])
+    .withMessage('Status must be either "approved" or "rejected"'),
   body('reviewNotes')
     .optional()
     .trim()

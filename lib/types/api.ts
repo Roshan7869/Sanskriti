@@ -7,97 +7,73 @@ export interface ApiResponse<T = any> {
     currentPage: number;
     totalPages: number;
     totalItems: number;
-    itemsPerPage: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
+    itemsPerPage?: number;
+    hasNextPage?: boolean;
+    hasPrevPage?: boolean;
   };
+}
+
+export interface Location {
+  _id: string;
+  name: string;
+  description: string;
+  images: string[];
+  coordinates: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+  address?: string;
+  category: 'historical' | 'natural' | 'urban' | 'adventure';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Event {
   _id: string;
-  title: string;
-  description: string;
-  category: string;
-  location: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  date: string;
-  imageUrl: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface HistoricalPlace {
-  _id: string;
-  title: string;
-  description: string;
-  category: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  imageUrl: string;
-  rating: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Influencer {
-  _id: string;
-  username: string;
   name: string;
-  category: string;
-  imageUrl: string;
-  followers: string;
-  bio?: string;
-  socialLinks: {
-    instagram?: string;
-    twitter?: string;
-    youtube?: string;
+  description: string;
+  startDate: string;
+  endDate?: string;
+  location?: string; // Reference to Location ID
+  coordinates?: {
+    type: 'Point';
+    coordinates: [number, number];
   };
-  isActive: boolean;
+  type: 'festival' | 'celebration' | 'pandal' | 'event';
+  images: string[];
   createdAt: string;
-  updatedAt: string;
-}
-
-export interface Reporter {
-  _id: string;
-  username: string;
-  name: string;
-  outlet: string;
-  imageUrl: string;
-  followers: string;
-  bio?: string;
-  articles: Array<{
-    title: string;
-    link: string;
-    publishedAt: string;
-  }>;
-  socialLinks: {
-    instagram?: string;
-    twitter?: string;
-    linkedin?: string;
-  };
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  updatedAt:string;
 }
 
 export interface User {
   id: string;
+  username: string;
   email: string;
-  region: string;
-  membershipLevel: 'basic' | 'plus';
-  approved: boolean;
+  profileImage?: string;
+  bio?: string;
+  socialLinks?: {
+    instagram?: string;
+    newsChannel?: string;
+  };
+  membershipStatus: 'regular' | 'plus_pending' | 'plus_approved';
+  role: 'user' | 'admin';
   favorites: {
     events: string[];
-    places: string[];
+    locations: string[];
   };
   createdAt: string;
+}
+
+// A simplified type for displaying featured members
+export interface Member {
+  _id: string;
+  username: string;
+  profileImage?: string;
+  bio?: string;
+  socialLinks?: {
+    instagram?: string;
+    newsChannel?: string;
+  };
 }
 
 export interface AuthResponse {
@@ -105,29 +81,28 @@ export interface AuthResponse {
   user: User;
 }
 
-export interface InstagramReel {
+export interface Content {
   _id: string;
-  locationId?: string;
-  eventId?: string;
-  uploaderId: string;
-  uploaderName: string;
-  uploaderType: 'admin' | 'creator';
-  reelUrl: string;
-  instagramId?: string;
-  caption: string;
-  thumbnailUrl?: string;
-  isApproved: boolean;
+  title?: string;
+  url: string;
+  type: 'reel' | 'vlog' | 'news';
+  creator: string; // User ID
+  linkedTo: {
+    type: 'location' | 'event';
+    id: string;
+  };
+  status: 'pending' | 'approved' | 'rejected';
+  views: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface LocationDetail extends HistoricalPlace {
-  reels: InstagramReel[];
-  mapEmbedUrl: string;
+export interface LocationDetail extends Location {
+  contents: Content[];
 }
 
 export interface MembershipApplication {
-  _id: string;
+  _id:string;
   userId: string;
   instagramHandle?: string;
   bio: string;
@@ -135,5 +110,5 @@ export interface MembershipApplication {
   status: 'pending' | 'approved' | 'rejected';
   appliedAt: string;
   reviewedAt?: string;
-  reviewedBy?: string;
+  reviewedBy?: string; // User ID
 }

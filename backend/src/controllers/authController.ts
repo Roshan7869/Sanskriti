@@ -1,47 +1,47 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User.js';
 import { generateToken } from '../middleware/auth.js';
-import jwt from 'jsonwebtoken';
 import { ApiResponse, UserRegistration, UserLogin } from '../types/index.js';
+
+// Helper to shape user data for responses
+const shapeUserData = (user: any) => ({
+  id: user._id,
+  username: user.username,
+  email: user.email,
+  profileImage: user.profileImage,
+  bio: user.bio,
+  socialLinks: user.socialLinks,
+  membershipStatus: user.membershipStatus,
+  role: user.role,
+  favorites: user.favorites,
+});
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, region }: UserRegistration = req.body;
+    const { username, email, password }: UserRegistration = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       res.status(400).json({
         success: false,
-        error: 'User already exists with this email'
+        error: 'User already exists with this email or username'
       } as ApiResponse);
       return;
     }
 
     // Create new user
-    const user = new User({
-      email,
-      password,
-      region: region || 'Bhilai, CG'
-    });
-
+    const user = new User({ username, email, password });
     await user.save();
 
     // Generate token
-    const token = generateToken(user._id.toString(), user.email);
+    const token = generateToken(user._id.toString(), user.email, user.role);
 
     res.status(201).json({
       success: true,
       data: {
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-          region: user.region,
-          membershipLevel: user.membershipLevel,
-          approved: user.approved,
-          favorites: user.favorites
-        }
+        user: shapeUserData(user)
       },
       message: 'User registered successfully'
     } as ApiResponse);
@@ -79,20 +79,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Generate token
-    const token = generateToken(user._id.toString(), user.email);
+    const token = generateToken(user._id.toString(), user.email, user.role);
 
     res.json({
       success: true,
       data: {
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-          region: user.region,
-          membershipLevel: user.membershipLevel,
-          approved: user.approved,
-          favorites: user.favorites
-        }
+        user: shapeUserData(user)
       },
       message: 'Login successful'
     } as ApiResponse);
@@ -101,51 +94,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       success: false,
       error: 'Login failed'
-    } as ApiResponse);
-  }
-};
-
-export const verifyToken = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-      res.status(401).json({
-        success: false,
-        error: 'No token provided'
-      } as ApiResponse);
-      return;
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key') as any;
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid token'
-      } as ApiResponse);
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: {
-        user: {
-          id: user._id,
-          email: user.email,
-          region: user.region,
-          membershipLevel: user.membershipLevel,
-          approved: user.approved,
-          favorites: user.favorites
-        }
-      }
-    } as ApiResponse);
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      error: 'Invalid token'
     } as ApiResponse);
   }
 };
