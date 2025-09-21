@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { MapPin, Star, Clock } from 'lucide-react';
+import { MapPin, Star, Clock, Heart } from 'lucide-react';
 import { usePlaces } from '@/lib/hooks/usePlaces';
+import { useAuth } from '@/lib/context/AuthContext';
+import { profileAPI } from '@/lib/services/api';
 import { HistoricalPlace } from '@/lib/types/api';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
@@ -14,6 +16,14 @@ interface HistoricalPlacesProps {
 
 const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery, onLocationClick }) => {
   const { places, loading, error } = usePlaces({ query: searchQuery, limit: 5 });
+  const { user, isAuthenticated } = useAuth();
+  const [favoriteIds, setFavoriteIds] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (user?.favorites?.places) {
+      setFavoriteIds(new Set(user.favorites.places.map((p: any) => p._id || p)));
+    }
+  }, [user]);
 
   const handleGetDirections = (lat: number, lng: number) => {
     window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
@@ -23,6 +33,32 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery, onLoca
     onLocationClick?.(placeId);
   };
 
+  const toggleFavorite = async (placeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      // Show auth modal or redirect to login
+      return;
+    }
+
+    try {
+      const isFavorite = favoriteIds.has(placeId);
+      
+      if (isFavorite) {
+        await profileAPI.removeFromFavorites('places', placeId);
+        setFavoriteIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(placeId);
+          return newSet;
+        });
+      } else {
+        await profileAPI.addToFavorites('places', placeId);
+        setFavoriteIds(prev => new Set(prev).add(placeId));
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
   if (loading) {
     return (
       <section className="px-4 lg:px-0 py-8">
@@ -75,6 +111,18 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery, onLoca
                 <Star className="w-3 h-3 text-yellow-500 fill-current" />
                 <span className="text-xs font-semibold text-gray-700">{place.rating}</span>
               </div>
+              {isAuthenticated && (
+                <button
+                  onClick={(e) => toggleFavorite(place._id, e)}
+                  className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+                >
+                  <Heart className={`w-5 h-5 ${
+                    favoriteIds.has(place._id) 
+                      ? 'text-red-500 fill-current' 
+                      : 'text-gray-600'
+                  }`} />
+                </button>
+              )}
             </div>
             
             <div className="p-6 lg:p-8">

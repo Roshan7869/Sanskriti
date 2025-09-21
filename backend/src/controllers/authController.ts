@@ -38,6 +38,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           id: user._id,
           email: user.email,
           region: user.region,
+          membershipLevel: user.membershipLevel,
+          approved: user.approved,
           favorites: user.favorites
         }
       },
@@ -87,6 +89,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           id: user._id,
           email: user.email,
           region: user.region,
+          membershipLevel: user.membershipLevel,
+          approved: user.approved,
           favorites: user.favorites
         }
       },
@@ -132,6 +136,8 @@ export const verifyToken = async (req: Request, res: Response): Promise<void> =>
           id: user._id,
           email: user.email,
           region: user.region,
+          membershipLevel: user.membershipLevel,
+          approved: user.approved,
           favorites: user.favorites
         }
       }

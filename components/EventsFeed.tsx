@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { MapPin, Calendar } from 'lucide-react';
+import { MapPin, Calendar, Heart } from 'lucide-react';
 import { useEvents } from '@/lib/hooks/useEvents';
+import { useAuth } from '@/lib/context/AuthContext';
+import { profileAPI } from '@/lib/services/api';
 import { Event } from '@/lib/types/api';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
@@ -13,11 +15,44 @@ interface EventsFeedProps {
 
 const EventsFeed: React.FC<EventsFeedProps> = ({ searchQuery }) => {
   const { events, loading, error } = useEvents({ query: searchQuery, limit: 5 });
+  const { user, isAuthenticated } = useAuth();
+  const [favoriteIds, setFavoriteIds] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (user?.favorites?.events) {
+      setFavoriteIds(new Set(user.favorites.events.map((e: any) => e._id || e)));
+    }
+  }, [user]);
 
   const handleGetDirections = (lat: number, lng: number) => {
     window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
   };
 
+  const toggleFavorite = async (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      return;
+    }
+
+    try {
+      const isFavorite = favoriteIds.has(eventId);
+      
+      if (isFavorite) {
+        await profileAPI.removeFromFavorites('events', eventId);
+        setFavoriteIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(eventId);
+          return newSet;
+        });
+      } else {
+        await profileAPI.addToFavorites('events', eventId);
+        setFavoriteIds(prev => new Set(prev).add(eventId));
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -72,6 +107,18 @@ const EventsFeed: React.FC<EventsFeedProps> = ({ searchQuery }) => {
                   {event.category}
                 </span>
               </div>
+              {isAuthenticated && (
+                <button
+                  onClick={(e) => toggleFavorite(event._id, e)}
+                  className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+                >
+                  <Heart className={`w-5 h-5 ${
+                    favoriteIds.has(event._id) 
+                      ? 'text-red-500 fill-current' 
+                      : 'text-gray-600'
+                  }`} />
+                </button>
+              )}
             </div>
             
             <div className="p-6 lg:p-8">

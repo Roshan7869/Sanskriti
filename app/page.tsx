@@ -10,9 +10,17 @@ import NewsReporters from '@/components/NewsReporters';
 import BottomNavigation from '@/components/BottomNavigation';
 import AuthModal from '@/components/AuthModal';
 import MembershipModal from '@/components/MembershipModal';
+import SearchResults from '@/components/SearchResults';
+import EventCalendar from '@/components/EventCalendar';
+import WeatherWidget from '@/components/WeatherWidget';
+import FavoritesManager from '@/components/FavoritesManager';
+import NotificationCenter from '@/components/NotificationCenter';
 import { usePlaces } from '@/lib/hooks/usePlaces';
 import { useEvents } from '@/lib/hooks/useEvents';
+import { searchAPI } from '@/lib/services/api';
+import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Bell } from 'lucide-react';
 
 export default function HomePage() {
   const [selectedLocation, setSelectedLocation] = useState('Bhilai, CG');
@@ -20,12 +28,45 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [searchResults, setSearchResults] = useState<any>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const router = useRouter();
+  const { user } = useAuth();
 
   // Fetch data for explore and events tabs
   const { places } = usePlaces({ limit: 20 });
   const { events } = useEvents({ limit: 20 });
 
+  // Handle search
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    setSearchLoading(true);
+    setSearchError(null);
+
+    try {
+      const results = await searchAPI.search({ query: query.trim(), type: 'all' });
+      setSearchResults(results.results);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.error || 'Search failed');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Debounced search
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      handleSearch(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
   const handleLocationClick = (locationId: string) => {
     router.push(`/location/${locationId}`);
   };
@@ -40,7 +81,32 @@ export default function HomePage() {
         onAuthClick={() => setShowAuthModal(true)}
       />
       
+      {/* Notification Bell */}
+      <button
+        onClick={() => setShowNotifications(true)}
+        className="fixed top-4 right-4 z-40 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 lg:top-6 lg:right-6"
+      >
+        <Bell className="w-6 h-6 text-gray-600" />
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+      </button>
+      
       <main className="pb-20 lg:pb-8">
+        {/* Search Results */}
+        {searchQuery && (
+          <div className="pt-32 px-4 lg:px-8">
+            <SearchResults
+              results={searchResults || {}}
+              loading={searchLoading}
+              error={searchError}
+              query={searchQuery}
+              onLocationClick={handleLocationClick}
+            />
+          </div>
+        )}
+        
+        {/* Main Content - only show when not searching */}
+        {!searchQuery && (
+          <>
         {activeTab === 'home' && (
           <>
             <Hero />
@@ -53,6 +119,7 @@ export default function HomePage() {
                 />
               </div>
               <div className="lg:col-span-4 lg:space-y-8">
+                <WeatherWidget location={selectedLocation} />
                 <TopInfluencers />
                 <NewsReporters />
               </div>
@@ -98,80 +165,80 @@ export default function HomePage() {
         )}
         
         {activeTab === 'events' && (
-          <div className="pt-20 px-4 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Upcoming Events</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {events.map(event => (
-                <div key={event._id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="flex items-start space-x-4">
-                    <img src={event.imageUrl} alt={event.title} className="w-20 h-20 rounded-lg object-cover" />
-                    <div className="flex-1">
-                      <span className="text-xs font-semibold text-orange-600 uppercase tracking-wide">{event.category}</span>
-                      <h3 className="font-bold text-lg mt-1">{event.title}</h3>
-                      <p className="text-gray-600 text-sm mt-1">{event.location}</p>
-                      <p className="text-gray-500 text-xs mt-2">
-                        {new Date(event.date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
+          <div className="pt-20 px-4 lg:px-8 space-y-8">
+            <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+              <div className="lg:col-span-2">
+                <EventCalendar />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Quick Events</h2>
+                <div className="space-y-4">
+                  {events.slice(0, 3).map(event => (
+                    <div key={event._id} className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-all duration-300">
+                      <div className="flex items-start space-x-3">
+                        <img src={event.imageUrl} alt={event.title} className="w-16 h-16 rounded-lg object-cover" />
+                        <div className="flex-1">
+                          <span className="text-xs font-semibold text-orange-600 uppercase">{event.category}</span>
+                          <h4 className="font-bold text-sm mt-1">{event.title}</h4>
+                          <p className="text-gray-600 text-xs mt-1">{event.location}</p>
+                          <p className="text-gray-500 text-xs mt-1">
+                            {new Date(event.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <button 
-                      onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${event.coordinates.lat},${event.coordinates.lng}`, '_blank')}
-                      className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm"
-                    >
-                      Get Directions
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         )}
         
         {activeTab === 'profile' && (
           <div className="pt-20 px-4 lg:px-8 max-w-2xl lg:mx-auto">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile</h2>
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-white text-2xl font-bold">U</span>
-                </div>
-                <h3 className="font-bold text-lg">Welcome to SANSKRITI</h3>
-                <p className="text-gray-600">Discover the heritage of {selectedLocation}</p>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-2">Plus Membership</h4>
-                  <p className="text-gray-600 text-sm mb-3">Share Instagram Reels and contribute content</p>
-                  <button
-                    onClick={() => setShowMembershipModal(true)}
-                    className="w-full bg-gradient-to-r from-pink-500 to-orange-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-orange-600 transition-all duration-300"
-                  >
-                    Apply for Plus Membership
-                  </button>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-2">Saved Places</h4>
-                  <p className="text-gray-600 text-sm">Save your favorite places to visit them later</p>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-2">Followed Influencers</h4>
-                  <p className="text-gray-600 text-sm">Stay updated with local culture and events</p>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-2">Preferences</h4>
-                  <p className="text-gray-600 text-sm">Current region: {selectedLocation}</p>
-                </div>
-                
-                <div className="border-t pt-4">
+            <div className="space-y-8">
+              {user ? (
+                <>
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="text-center mb-6">
+                      <div className="w-20 h-20 bg-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <span className="text-white text-2xl font-bold">{user.email.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <h3 className="font-bold text-lg">Welcome, {user.email.split('@')[0]}</h3>
+                      <p className="text-gray-600">{user.region}</p>
+                      <div className="mt-2">
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                          user.membershipLevel === 'plus' 
+                            ? 'bg-gradient-to-r from-pink-500 to-orange-500 text-white' 
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {user.membershipLevel === 'plus' ? 'Plus Member' : 'Basic Member'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {user.membershipLevel === 'basic' && (
+                      <button
+                        onClick={() => setShowMembershipModal(true)}
+                        className="w-full bg-gradient-to-r from-pink-500 to-orange-500 text-white py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-orange-600 transition-all duration-300 mb-4"
+                      >
+                        Upgrade to Plus
+                      </button>
+                    )}
+                  </div>
+                  
+                  <FavoritesManager onLocationClick={handleLocationClick} />
+                </>
+              ) : (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="text-center mb-6">
+                    <div className="w-20 h-20 bg-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <span className="text-white text-2xl font-bold">?</span>
+                    </div>
+                    <h3 className="font-bold text-lg">Welcome to SANSKRITI</h3>
+                    <p className="text-gray-600">Discover the heritage of {selectedLocation}</p>
+                  </div>
+                  
                   <button
                     onClick={() => setShowAuthModal(true)}
                     className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300"
@@ -179,9 +246,11 @@ export default function HomePage() {
                     Sign In / Register
                   </button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
+        )}
+          </>
         )}
       </main>
       
@@ -223,6 +292,11 @@ export default function HomePage() {
       <MembershipModal
         isOpen={showMembershipModal}
         onClose={() => setShowMembershipModal(false)}
+      />
+      
+      <NotificationCenter
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
       />
     </div>
   );
