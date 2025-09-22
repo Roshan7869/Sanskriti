@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { eventsAPI } from '@/lib/services/api';
 import { Event } from '@/lib/types/api';
 
@@ -11,37 +12,33 @@ interface UseEventsParams {
 }
 
 export const useEvents = (params: UseEventsParams = {}) => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<any>(null);
+  const queryKey = ['events', params];
+  
+  const {
+    data,
+    isLoading: loading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey,
+    queryFn: () => eventsAPI.getEvents({
+      page: params.page || 1,
+      limit: params.limit || 10,
+      query: params.query,
+      category: params.category,
+      location: params.location
+    }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
+  });
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const data = await eventsAPI.getEvents({
-          page: params.page || 1,
-          limit: params.limit || 10,
-          query: params.query,
-          category: params.category,
-          location: params.location
-        });
-        
-        setEvents(data.events);
-        setPagination(data.pagination);
-      } catch (err: any) {
-        console.error('Failed to fetch events:', err);
-        setError(err.response?.data?.error || err.message || 'Failed to fetch events');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, [params.query, params.category, params.location, params.page, params.limit]);
-
-  return { events, loading, error, pagination };
+  return {
+    events: data?.events || [],
+    pagination: data?.pagination,
+    loading,
+    error: error?.message || null,
+    refetch
+  };
 };

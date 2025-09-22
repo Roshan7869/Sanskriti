@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { placesAPI } from '@/lib/services/api';
 import { HistoricalPlace } from '@/lib/types/api';
 
@@ -9,35 +10,31 @@ interface UsePlacesParams {
 }
 
 export const usePlaces = (params: UsePlacesParams = {}) => {
-  const [places, setPlaces] = useState<HistoricalPlace[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<any>(null);
+  const queryKey = ['places', params];
+  
+  const {
+    data,
+    isLoading: loading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey,
+    queryFn: () => placesAPI.getPlaces({
+      page: params.page || 1,
+      limit: params.limit || 10,
+      query: params.query
+    }),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 20 * 60 * 1000, // 20 minutes
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
+  });
 
-  useEffect(() => {
-    const fetchPlaces = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const data = await placesAPI.getPlaces({
-          page: params.page || 1,
-          limit: params.limit || 10,
-          query: params.query
-        });
-        
-        setPlaces(data.places);
-        setPagination(data.pagination);
-      } catch (err: any) {
-        console.error('Failed to fetch places:', err);
-        setError(err.response?.data?.error || err.message || 'Failed to fetch places');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlaces();
-  }, [params.query, params.page, params.limit]);
-
-  return { places, loading, error, pagination };
+  return {
+    places: data?.places || [],
+    pagination: data?.pagination,
+    loading,
+    error: error?.message || null,
+    refetch
+  };
 };

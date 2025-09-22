@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { Event } from '../models/Event.js';
+import { cacheUtils, invalidateCache } from '../middleware/cache.js';
+import { optimizedQueries } from '../utils/databaseOptimization.js';
 import { ApiResponse, EventQuery, AuthenticatedRequest } from '../types/index.js';
 
 export const getEvents = async (req: Request, res: Response): Promise<void> => {
@@ -15,47 +17,14 @@ export const getEvents = async (req: Request, res: Response): Promise<void> => {
 
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
-    const skip = (pageNum - 1) * limitNum;
 
-    // Build filter object
-    const filter: any = { isActive: true };
-
-    // Text search
-    if (query) {
-      filter.$text = { $search: query };
-    }
-
-    // Date filter
-    if (date) {
-      const searchDate = new Date(date);
-      const nextDay = new Date(searchDate);
-      nextDay.setDate(nextDay.getDate() + 1);
-      
-      filter.date = {
-        $gte: searchDate,
-        $lt: nextDay
-      };
-    }
-
-    // Category filter
-    if (category) {
-      filter.category = new RegExp(category, 'i');
-    }
-
-    // Location filter
-    if (location) {
-      filter.location = new RegExp(location, 'i');
-    }
-
-    // Execute query with pagination
-    const [events, total] = await Promise.all([
-      Event.find(filter)
-        .sort({ date: 1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Event.countDocuments(filter)
-    ]);
+    
+    // Use optimized query
+    const { events, total } = await optimizedQueries.searchEvents(
+      { query, date, category, location },
+      pageNum,
+      limitNum
+    );
 
     const totalPages = Math.ceil(total / limitNum);
 
@@ -115,6 +84,9 @@ export const createEvent = async (req: AuthenticatedRequest, res: Response): Pro
     const event = new Event(eventData);
     await event.save();
 
+    // Invalidate related caches
+    await invalidateCache(['events:*', 'search:*']);
+
     res.status(201).json({
       success: true,
       data: { event },
@@ -148,6 +120,9 @@ export const updateEvent = async (req: AuthenticatedRequest, res: Response): Pro
       return;
     }
 
+    // Invalidate related caches
+    await invalidateCache(['events:*', 'search:*']);
+
     res.json({
       success: true,
       data: { event },
@@ -179,6 +154,9 @@ export const deleteEvent = async (req: AuthenticatedRequest, res: Response): Pro
       } as ApiResponse);
       return;
     }
+
+    // Invalidate related caches
+    await invalidateCache(['events:*', 'search:*']);
 
     res.json({
       success: true,

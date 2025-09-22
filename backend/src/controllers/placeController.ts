@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { HistoricalPlace } from '../models/HistoricalPlace.js';
+import { optimizedQueries } from '../utils/databaseOptimization.js';
+import { invalidateCache } from '../middleware/cache.js';
 import { ApiResponse, PaginationQuery } from '../types/index.js';
 
 export const getPlaces = async (req: Request, res: Response): Promise<void> => {
@@ -12,25 +14,16 @@ export const getPlaces = async (req: Request, res: Response): Promise<void> => {
 
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
-    const skip = (pageNum - 1) * limitNum;
 
-    // Build filter object
-    const filter: any = { isActive: true };
 
-    // Text search
-    if (query) {
-      filter.$text = { $search: query };
-    }
 
-    // Execute query with pagination
-    const [places, total] = await Promise.all([
-      HistoricalPlace.find(filter)
-        .sort({ rating: -1, createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      HistoricalPlace.countDocuments(filter)
-    ]);
+    
+    // Use optimized query
+    const { places, total } = await optimizedQueries.searchPlaces(
+      { query },
+      pageNum,
+      limitNum
+    );
 
     const totalPages = Math.ceil(total / limitNum);
 
@@ -89,6 +82,9 @@ export const createPlace = async (req: Request, res: Response): Promise<void> =>
 
     const place = new HistoricalPlace(placeData);
     await place.save();
+
+    // Invalidate related caches
+    await invalidateCache(['places:*', 'search:*']);
 
     res.status(201).json({
       success: true,

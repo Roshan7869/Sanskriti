@@ -2,8 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDatabase } from './config/database.js';
+import { createOptimalIndexes } from './utils/databaseOptimization.js';
 import routes from './routes/index.js';
-import { helmetConfig, apiLimiter, errorHandler, notFoundHandler } from './middleware/security.js';
+import { helmetConfig, errorHandler, notFoundHandler } from './middleware/security.js';
+import { tieredRateLimit } from './middleware/advancedRateLimit.js';
+import { requestLogger } from './middleware/monitoring.js';
 
 // Load environment variables
 dotenv.config();
@@ -14,7 +17,10 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Security middleware
 app.use(helmetConfig);
-app.use(apiLimiter);
+app.use(tieredRateLimit);
+
+// Request logging
+app.use(requestLogger);
 
 // CORS configuration
 app.use(cors({
@@ -60,12 +66,16 @@ const startServer = async (): Promise<void> => {
     // Connect to database
     await connectDatabase();
     
+    // Create optimal indexes
+    await createOptimalIndexes();
+    
     // Start listening
     app.listen(PORT, () => {
       console.log(`🚀 SANSKRITI API Server running on port ${PORT}`);
       console.log(`📱 Frontend URL: ${FRONTEND_URL}`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
       console.log(`💚 Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`📊 Metrics: http://localhost:${PORT}/api/metrics`);
       console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {

@@ -8,6 +8,8 @@ import { profileAPI } from '@/lib/services/api';
 import { Event } from '@/lib/types/api';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
+import OptimizedImage from './OptimizedImage';
+import LazySection from './LazySection';
 
 interface EventsFeedProps {
   searchQuery?: string;
@@ -96,11 +98,15 @@ const EventsFeed: React.FC<EventsFeedProps> = ({ searchQuery }) => {
         {events.map(event => (
           <div key={event._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="relative">
-              <img 
+              <OptimizedImage
                 src={event.imageUrl} 
                 alt={event.title}
-                className="w-full h-48 lg:h-56 object-cover"
-                loading="lazy"
+                width={800}
+                height={224}
+                className="w-full h-48 lg:h-56"
+                objectFit="cover"
+                sizes="(max-width: 768px) 100vw, 800px"
+                placeholder="blur"
               />
               <div className="absolute top-4 left-4">
                 <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">

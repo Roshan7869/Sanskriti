@@ -8,6 +8,7 @@ import { profileAPI } from '@/lib/services/api';
 import { HistoricalPlace } from '@/lib/types/api';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
+import OptimizedImage from './OptimizedImage';
 
 interface HistoricalPlacesProps {
   searchQuery?: string;
@@ -96,11 +97,15 @@ const HistoricalPlaces: React.FC<HistoricalPlacesProps> = ({ searchQuery, onLoca
             onClick={() => handlePlaceClick(place._id)}
           >
             <div className="relative">
-              <img 
+              <OptimizedImage
                 src={place.imageUrl} 
                 alt={place.title}
-                className="w-full h-48 lg:h-56 object-cover"
-                loading="lazy"
+                width={800}
+                height={224}
+                className="w-full h-48 lg:h-56"
+                objectFit="cover"
+                sizes="(max-width: 768px) 100vw, 800px"
+                placeholder="blur"
               />
               <div className="absolute top-4 left-4">
                 <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">

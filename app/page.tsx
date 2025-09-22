@@ -15,6 +15,7 @@ import EventCalendar from '@/components/EventCalendar';
 import WeatherWidget from '@/components/WeatherWidget';
 import FavoritesManager from '@/components/FavoritesManager';
 import NotificationCenter from '@/components/NotificationCenter';
+import LazySection from '@/components/LazySection';
 import { usePlaces } from '@/lib/hooks/usePlaces';
 import { useEvents } from '@/lib/hooks/useEvents';
 import { searchAPI } from '@/lib/services/api';
@@ -112,86 +113,100 @@ export default function HomePage() {
             <Hero />
             <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:px-8">
               <div className="lg:col-span-8">
-                <EventsFeed searchQuery={searchQuery} />
-                <HistoricalPlaces 
-                  searchQuery={searchQuery} 
-                  onLocationClick={handleLocationClick}
-                />
+                <LazySection>
+                  <EventsFeed searchQuery={searchQuery} />
+                </LazySection>
+                <LazySection>
+                  <HistoricalPlaces 
+                    searchQuery={searchQuery} 
+                    onLocationClick={handleLocationClick}
+                  />
+                </LazySection>
               </div>
               <div className="lg:col-span-4 lg:space-y-8">
-                <WeatherWidget location={selectedLocation} />
-                <TopInfluencers />
-                <NewsReporters />
+                <LazySection>
+                  <WeatherWidget location={selectedLocation} />
+                </LazySection>
+                <LazySection>
+                  <TopInfluencers />
+                </LazySection>
+                <LazySection>
+                  <NewsReporters />
+                </LazySection>
               </div>
             </div>
           </>
         )}
         
         {activeTab === 'explore' && (
-          <div className="pt-20 px-4 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Explore Places</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {places.map(place => (
-                <div 
-                  key={place._id} 
-                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-                  onClick={() => handleLocationClick(place._id)}
-                >
-                  <img src={place.imageUrl} alt={place.title} className="w-full h-48 object-cover" />
-                  <div className="p-4">
-                    <h3 className="font-bold text-lg mb-2">{place.title}</h3>
-                    <p className="text-gray-600 text-sm mb-3">{place.description}</p>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold text-orange-600 uppercase">{place.category}</span>
-                      <div className="flex items-center space-x-1">
-                        <span className="text-yellow-500">★</span>
-                        <span className="text-sm font-medium">{place.rating}</span>
+          <LazySection>
+            <div className="pt-20 px-4 lg:px-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">Explore Places</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {places.map(place => (
+                  <div 
+                    key={place._id} 
+                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+                    onClick={() => handleLocationClick(place._id)}
+                  >
+                    <img src={place.imageUrl} alt={place.title} className="w-full h-48 object-cover" />
+                    <div className="p-4">
+                      <h3 className="font-bold text-lg mb-2">{place.title}</h3>
+                      <p className="text-gray-600 text-sm mb-3">{place.description}</p>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-orange-600 uppercase">{place.category}</span>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-yellow-500">★</span>
+                          <span className="text-sm font-medium">{place.rating}</span>
+                        </div>
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}`, '_blank');
+                        }}
+                        className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors"
+                      >
+                        Get Directions
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}`, '_blank');
-                      }}
-                      className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors"
-                    >
-                      Get Directions
-                    </button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          </LazySection>
         )}
         
         {activeTab === 'events' && (
-          <div className="pt-20 px-4 lg:px-8 space-y-8">
-            <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-              <div className="lg:col-span-2">
-                <EventCalendar />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Quick Events</h2>
-                <div className="space-y-4">
-                  {events.slice(0, 3).map(event => (
-                    <div key={event._id} className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-all duration-300">
-                      <div className="flex items-start space-x-3">
-                        <img src={event.imageUrl} alt={event.title} className="w-16 h-16 rounded-lg object-cover" />
-                        <div className="flex-1">
-                          <span className="text-xs font-semibold text-orange-600 uppercase">{event.category}</span>
-                          <h4 className="font-bold text-sm mt-1">{event.title}</h4>
-                          <p className="text-gray-600 text-xs mt-1">{event.location}</p>
-                          <p className="text-gray-500 text-xs mt-1">
-                            {new Date(event.date).toLocaleDateString()}
-                          </p>
+          <LazySection>
+            <div className="pt-20 px-4 lg:px-8 space-y-8">
+              <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+                <div className="lg:col-span-2">
+                  <EventCalendar />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6">Quick Events</h2>
+                  <div className="space-y-4">
+                    {events.slice(0, 3).map(event => (
+                      <div key={event._id} className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-all duration-300">
+                        <div className="flex items-start space-x-3">
+                          <img src={event.imageUrl} alt={event.title} className="w-16 h-16 rounded-lg object-cover" />
+                          <div className="flex-1">
+                            <span className="text-xs font-semibold text-orange-600 uppercase">{event.category}</span>
+                            <h4 className="font-bold text-sm mt-1">{event.title}</h4>
+                            <p className="text-gray-600 text-xs mt-1">{event.location}</p>
+                            <p className="text-gray-500 text-xs mt-1">
+                              {new Date(event.date).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </LazySection>
         )}
         
         {activeTab === 'profile' && (

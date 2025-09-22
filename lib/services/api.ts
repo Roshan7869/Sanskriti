@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { googleMapsCircuitBreaker } from '@/lib/utils/circuitBreaker';
 import { ApiResponse, Event, HistoricalPlace, Influencer, Reporter, AuthResponse } from '@/lib/types/api';
 
 const API_BASE_URL = typeof window !== 'undefined' 
@@ -14,6 +15,33 @@ const api = axios.create({
   },
 });
 
+// Add retry logic with exponential backoff
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+    
+    // Retry logic for network errors
+    if (!config._retry && error.code === 'NETWORK_ERROR') {
+      config._retry = true;
+      config._retryCount = (config._retryCount || 0) + 1;
+      
+      if (config._retryCount <= 3) {
+        const delay = Math.pow(2, config._retryCount) * 1000; // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return api(config);
+      }
+    }
+    
+    // Handle auth errors
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 // Add auth token to requests if available
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
@@ -25,17 +53,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors globally
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      // Optionally redirect to login
+// External services with circuit breaker
+export const externalServices = {
+  openGoogleMaps: async (lat: number, lng: number) => {
+    return googleMapsCircuitBreaker.execute(async () => {
+      const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      window.open(url, '_blank');
+      return true;
+    });
+  },
+
+  getDirections: async (lat: number, lng: number) => {
+    try {
+      await externalServices.openGoogleMaps(lat, lng);
+    } catch (error) {
+      // Fallback to OpenStreetMap
+      const fallbackUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15`;
+      window.open(fallbackUrl, '_blank');
     }
-    return Promise.reject(error);
   }
-);
+};
 
 // Auth API
 export const authAPI = {
